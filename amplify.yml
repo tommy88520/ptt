@@ -1,0 +1,28 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --cache .npm --prefer-offline
+        # AWS Amplify Hosting only exposes console-configured environment
+        # variables during the build phase, not to the Lambda that serves
+        # Next.js SSR requests at runtime (a known Amplify Hosting gap,
+        # see aws-amplify/amplify-hosting#1987 and #3345). Writing them
+        # into .env.production makes Next.js bundle them into the SSR
+        # output, so process.env picks them up at request time too.
+        - echo "PTT_API_BASE_URL=$PTT_API_BASE_URL" >> .env.production
+        - echo "PTT_WEB_API_KEY=$PTT_WEB_API_KEY" >> .env.production
+        - echo "DISCORD_CLIENT_ID=$DISCORD_CLIENT_ID" >> .env.production
+        - echo "DISCORD_CLIENT_SECRET=$DISCORD_CLIENT_SECRET" >> .env.production
+        - echo "SESSION_SECRET=$SESSION_SECRET" >> .env.production
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .next/cache/**/*
+      - .npm/**/*
