@@ -2,16 +2,21 @@
   "name": "ptt",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "scrape": "node --env-file=.env.local --experimental-strip-types scripts/mac-scraper-daemon.ts"
   },
   "dependencies": {
+    "cheerio": "^1.2.0",
+    "jose": "^6.2.5",
     "next": "16.2.12",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
