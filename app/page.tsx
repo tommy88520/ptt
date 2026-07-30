@@ -1,3 +1,5 @@
+import { recordPageView } from "@/app/lib/pageview";
+
 interface Article {
   articleId: string;
   board: string;
@@ -44,6 +46,7 @@ export default async function Page({
   const board = params.board || "MacShop";
   const keyword = params.keyword?.trim();
   const articles = await fetchArticles(keyword, board);
+  await recordPageView("/");
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 flex-1 w-full">

@@ -26,6 +26,7 @@ lambda/*/function.zip
 .DS_Store
 *.pem
 /logs
+/backups
 
 # debug
 npm-debug.log*

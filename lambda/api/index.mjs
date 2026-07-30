@@ -1,9 +1,20 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, DeleteCommand, PutCommand, QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  DeleteCommand,
+  PutCommand,
+  QueryCommand,
+  ScanCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
 
 const ARTICLES_TABLE = process.env.ARTICLES_TABLE ?? "ptt-articles";
 const SUBSCRIPTIONS_TABLE = process.env.SUBSCRIPTIONS_TABLE ?? "ptt-subscriptions";
+const RATE_LIMIT_TABLE = process.env.RATE_LIMIT_TABLE ?? "ptt-rate-limits";
+const PAGE_VIEWS_TABLE = process.env.PAGE_VIEWS_TABLE ?? "ptt-page-views";
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+const OWNER_DISCORD_ID = process.env.OWNER_DISCORD_ID;
+const DAILY_NOTIFICATION_LIMIT = 20;
 const BOARD_INDEX = "board-articleId-index";
 const DEFAULT_BOARD = "MacShop";
 const REQUIRED_FIELDS = ["articleId", "board", "title", "author", "url"];
@@ -55,12 +66,71 @@ async function sendDiscordDm(userId, content) {
   }
 }
 
+/**
+ * Owner has unlimited notifications; everyone else is capped per calendar day (UTC).
+ * Returns "allowed" (send the article notice), "notify-limit" (send a one-time
+ * "you've hit today's cap" notice instead), or "blocked" (send nothing).
+ */
+async function tryConsumeNotificationQuota(userId) {
+  if (userId === OWNER_DISCORD_ID) return "allowed";
+
+  const today = new Date().toISOString().slice(0, 10);
+  const ttl = Math.floor(Date.now() / 1000) + 2 * 24 * 60 * 60; // auto-expire the counter after 2 days
+
+  try {
+    await ddb.send(
+      new UpdateCommand({
+        TableName: RATE_LIMIT_TABLE,
+        Key: { userId, date: today },
+        UpdateExpression: "SET #count = if_not_exists(#count, :zero) + :one, #ttl = if_not_exists(#ttl, :ttl)",
+        ConditionExpression: "attribute_not_exists(#count) OR #count < :limit",
+        ExpressionAttributeNames: { "#count": "count", "#ttl": "ttl" },
+        ExpressionAttributeValues: {
+          ":zero": 0,
+          ":one": 1,
+          ":limit": DAILY_NOTIFICATION_LIMIT,
+          ":ttl": ttl,
+        },
+      })
+    );
+    return "allowed";
+  } catch (err) {
+    if (err.name !== "ConditionalCheckFailedException") throw err;
+  }
+
+  // Over the limit - tell them exactly once, then stay silent for the rest of the day.
+  try {
+    await ddb.send(
+      new UpdateCommand({
+        TableName: RATE_LIMIT_TABLE,
+        Key: { userId, date: today },
+        UpdateExpression: "SET limitNotified = :true",
+        ConditionExpression: "attribute_not_exists(limitNotified)",
+        ExpressionAttributeValues: { ":true": true },
+      })
+    );
+    return "notify-limit";
+  } catch (err) {
+    if (err.name === "ConditionalCheckFailedException") return "blocked";
+    throw err;
+  }
+}
+
 async function notifySubscribers(article) {
   const userIds = await findMatchingSubscribers(article.title);
   await Promise.all(
-    userIds.map((userId) =>
-      sendDiscordDm(userId, `PTT ${article.board} 新文章符合你的訂閱關鍵字：\n${article.title}\n${article.url}`)
-    )
+    userIds.map(async (userId) => {
+      const status = await tryConsumeNotificationQuota(userId);
+      if (status === "blocked") return;
+      if (status === "notify-limit") {
+        await sendDiscordDm(
+          userId,
+          `你今天的通知已達每日上限(${DAILY_NOTIFICATION_LIMIT} 篇),之後符合的新文章要等明天才會再通知你。`
+        );
+        return;
+      }
+      await sendDiscordDm(userId, `PTT ${article.board} 新文章符合你的訂閱關鍵字：\n${article.title}\n${article.url}`);
+    })
   );
 }
 
@@ -176,6 +246,50 @@ async function handleListSubscriptions(event) {
   return json(200, { userId, items: result.Items });
 }
 
+async function handleRecordPageView(event) {
+  let payload;
+  try {
+    payload = JSON.parse(event.body ?? "{}");
+  } catch {
+    return json(400, { error: "Invalid JSON body" });
+  }
+  const path = payload.path;
+  if (!path) {
+    return json(400, { error: "path is required" });
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  await ddb.send(
+    new UpdateCommand({
+      TableName: PAGE_VIEWS_TABLE,
+      Key: { path, date: today },
+      UpdateExpression: "SET #count = if_not_exists(#count, :zero) + :one",
+      ExpressionAttributeNames: { "#count": "count" },
+      ExpressionAttributeValues: { ":zero": 0, ":one": 1 },
+    })
+  );
+  return json(204, {});
+}
+
+async function handleListPageViews(event) {
+  const path = event.queryStringParameters?.path;
+  if (!path) {
+    return json(400, { error: "path query parameter is required" });
+  }
+
+  const result = await ddb.send(
+    new QueryCommand({
+      TableName: PAGE_VIEWS_TABLE,
+      KeyConditionExpression: "#path = :path",
+      ExpressionAttributeNames: { "#path": "path" },
+      ExpressionAttributeValues: { ":path": path },
+      ScanIndexForward: false,
+    })
+  );
+  const total = result.Items.reduce((sum, item) => sum + item.count, 0);
+  return json(200, { path, total, byDate: result.Items });
+}
+
 export const handler = async (event) => {
   const method = event.requestContext?.http?.method ?? event.httpMethod;
   const resource = event.resource ?? event.path;
@@ -187,6 +301,12 @@ export const handler = async (event) => {
       if (method === "GET") return await handleListSubscriptions(event);
       if (method === "POST") return await handleSubscribe(event);
       if (method === "DELETE") return await handleUnsubscribe(event);
+      return json(405, { error: "Method not allowed" });
+    }
+
+    if (resource === "/pageviews") {
+      if (method === "POST") return await handleRecordPageView(event);
+      if (method === "GET") return await handleListPageViews(event);
       return json(405, { error: "Method not allowed" });
     }
 

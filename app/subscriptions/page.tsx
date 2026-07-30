@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { getSession } from "@/app/lib/session";
 import { subscribeAction, unsubscribeAction } from "@/app/actions/subscriptions";
+import { recordPageView } from "@/app/lib/pageview";
+
+export const metadata: Metadata = {
+  title: "訂閱管理｜PTT MacShop 雷達",
+  description: "用 Discord 帳號登入,訂閱 PTT MacShop 版關鍵字(例如 iPhone、MacBook),符合的新文章立即私訊通知你。",
+};
 
 interface Subscription {
   userId: string;
@@ -47,6 +54,7 @@ async function fetchArticlesForKeyword(keyword: string): Promise<Article[]> {
 
 export default async function SubscriptionsPage() {
   const session = await getSession();
+  await recordPageView("/subscriptions");
 
   if (!session) {
     return (

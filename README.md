@@ -58,8 +58,15 @@ Tommy 本身很熟 Next.js/TypeScript/GCP,目前 AWS 經驗較少,想透過一�
 - [x] 前端頁面(`app/page.tsx`,列表 + 關鍵字搜尋,唯讀)
 - [x] 關鍵字訂閱通知(Discord `/subscribe` `/unsubscribe` `/subscriptions`
       指令 + 新文章比對後私訊通知,已端對端測試過)
+- [x] 網頁版訂閱管理(`app/subscriptions/page.tsx`,用 Discord OAuth2
+      登入辨識身分,訂閱/取消透過 Server Action 呼叫 AWS API,API Key
+      只存在伺服器環境變數,瀏覽器看不到)
+- [x] 非擁有者 Discord 帳號每日通知上限 20 篇(`ptt-rate-limits` 表,
+      超過上限會先發一次「已達上限」通知,之後靜默到隔天)
+- [x] 網頁瀏覽次數記錄(`ptt-page-views` 表,不用 GA,自己存)
+- [x] 使用條款草稿(`docs/terms-of-use.md`)
+- [x] 資料匯出/備份 script(`npm run export-data`,見下方「資料可攜性」)
 - [ ] 部署前端到 Amplify
-- [ ] 網頁版訂閱管理(要等 Cognito 登入做完才做,見下方)
 - [ ] (可選)EventBridge 排程健康檢查,偵測 Mac 端排程太久沒回報就發
       Discord 警示
 
@@ -84,9 +91,49 @@ Tommy 本身很熟 Next.js/TypeScript/GCP,目前 AWS 經驗較少,想透過一�
   路徑 `/discord-interactions`,用 Public Key 驗證簽章
 - EventBridge 目前沒用到(原本規劃拿來排程爬蟲,但爬蟲改成本機 launchd
   了),之後可以拿來做健康檢查
-- 因為多使用者是用 Discord 指令做的(userId = Discord user id),
-  網頁版的訂閱管理留到之後做 Cognito 登入才一起做,現在網頁只有唯讀
-  搜尋
+- 多使用者身分統一用 **Discord user id** 當 `userId`,不管是從 Discord
+  指令訂閱、還是從網頁用 Discord OAuth2 登入訂閱,寫進 `ptt-subscriptions`
+  的都是同一個 ID,兩邊資料自然共通
+- DynamoDB table 一覽:
+  - `ptt-articles`:爬到的文章(PK `articleId`,GSI `board-articleId-index`)
+  - `ptt-subscriptions`:訂閱關鍵字(PK `userId`,SK `keyword`)
+  - `ptt-rate-limits`:非擁有者每日通知計數(PK `userId`,SK `date`,
+    有 TTL,兩天後自動清除)
+  - `ptt-page-views`:網頁瀏覽次數(PK `path`,SK `date`)
+
+## 網頁版訂閱管理(Discord OAuth2 登入)
+
+- `/subscriptions` 頁面用「Sign in with Discord」辨識使用者,登入後
+  session 存在 httpOnly cookie(`app/lib/session.ts`,用 `jose` 簽章,
+  不是明文)
+- 訂閱/取消/查詢都是 Server Action(`app/actions/subscriptions.ts`)
+  呼叫 AWS API Gateway,**瀏覽器完全看不到 AWS 網址或 API Key**——這兩個
+  只存在 Next.js 伺服器端的環境變數(`PTT_API_BASE_URL`、`PTT_WEB_API_KEY`)
+- API Gateway 額外開了 `/subscriptions`(GET/POST/DELETE,都要另一把
+  獨立的 API Key `ptt-web-app-key`,方便跟 Mac 端的 `ptt-mac-scraper-key`
+  分開追蹤用量)和 `/pageviews`(GET/POST,同樣要 API Key)
+
+## 資料可攜性(這個 AWS 帳號以後可能要換掉)
+
+這個專案本來就是「練習用、可拋棄」的 AWS 帳號,所以特別注意不要讓資料被
+鎖死在 AWS 專屬格式裡:
+
+- **前端(Next.js)和 Mac 端爬蟲完全不知道背後是 DynamoDB**——它們只認得
+  我們自己定義的 HTTP JSON API(`/articles`、`/subscriptions`、
+  `/pageviews`)。以後如果要把後端搬去別的平台(換一個資料庫、換一個
+  雲端服務商),只要維持同樣的 API 合約,前端和爬蟲的程式碼完全不用改
+- **資料紀錄本身是普通的 JSON 物件**(字串、數字、布林值),沒有用
+  DynamoDB 專屬的型別(例如 Set、Binary),也沒有用只有 DynamoDB
+  才看得懂的欄位設計,換成 Postgres/MongoDB/Firebase 都能直接對應欄位匯入
+- **隨時可以把所有表匯出成純 JSON**:`npm run export-data`
+  (`scripts/export-data.ts`),會把 `ptt-articles`、`ptt-subscriptions`、
+  `ptt-rate-limits`、`ptt-page-views` 四張表全部 dump 到本機
+  `backups/`(已加進 `.gitignore`,不會進 git)。建議帳號有任何風險
+  (例如免費額度快到期)前,先跑一次留底
+- 真的要搬家的話,AWS 專屬、需要重寫的部分只有:Lambda handler 裡呼叫
+  DynamoDB SDK 的那幾行、IAM role 設定、API Gateway 的路由設定——業務邏輯
+  本身(比對關鍵字、發 Discord 通知、驗證簽章)是普通 Node.js,搬到任何
+  平台都能直接用
 
 ## 給接手的 Claude Code Session
 
