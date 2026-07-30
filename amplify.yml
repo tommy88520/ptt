@@ -15,6 +15,7 @@ frontend:
         - echo "DISCORD_CLIENT_ID=$DISCORD_CLIENT_ID" >> .env.production
         - echo "DISCORD_CLIENT_SECRET=$DISCORD_CLIENT_SECRET" >> .env.production
         - echo "SESSION_SECRET=$SESSION_SECRET" >> .env.production
+        - echo "APP_BASE_URL=$APP_BASE_URL" >> .env.production
     build:
       commands:
         - npm run build
