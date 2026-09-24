@@ -1,5 +1,5 @@
 /**
- * 把 `npm run export-data` 匯出的 DynamoDB JSON 匯入 Postgres。
+ * 把當初從 DynamoDB 匯出的 JSON（backups/，2026-09-24 搬家時的最後一份）匯入 Postgres。
  * 每張表自動挑 backups/ 裡最新的那份；可重複執行（已存在的列會略過）。
  *
  * 用法：node --env-file=.env.local --experimental-strip-types scripts/import-backup.ts
