@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CONTACT_URL } from "@/app/components/InviteNotice";
 
 export default function SiteFooter() {
   return (
@@ -15,6 +16,9 @@ export default function SiteFooter() {
 
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-gray-400">
           <span>PTT MacShop 雷達</span>
+          <a href={CONTACT_URL} className="hover:text-gray-600 dark:hover:text-gray-300">
+            寫信給我
+          </a>
           <Link href="/terms" className="hover:text-gray-600 dark:hover:text-gray-300">
             使用條款
           </Link>

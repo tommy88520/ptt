@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import InviteNotice from "@/app/components/InviteNotice";
 import { getSession } from "@/app/lib/session";
 import { subscribeAction, unsubscribeAction } from "@/app/actions/subscriptions";
 import { recordPageView } from "@/app/lib/pageview";
@@ -22,6 +23,7 @@ export default async function SubscriptionsPage() {
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
           用 Discord 帳號登入,管理你的關鍵字訂閱——符合的新文章會在 Discord 通知頻道 @ 你。
         </p>
+        <InviteNotice />
         <a
           href="/api/auth/discord"
           className="inline-flex items-center gap-2 rounded-lg bg-[#5865F2] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
@@ -47,6 +49,8 @@ export default async function SubscriptionsPage() {
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
         符合的新文章會在 Discord 通知頻道 @ 你({session.username})
       </p>
+
+      <InviteNotice />
 
       <form action={subscribeAction} className="mb-8 flex flex-col gap-2 sm:flex-row">
         <input

@@ -1,3 +1,4 @@
+import InviteNotice from "@/app/components/InviteNotice";
 import { recordPageView } from "@/app/lib/pageview";
 import { listArticles } from "@/app/services/articles";
 
@@ -28,6 +29,8 @@ export default async function Page({
     <main className="mx-auto max-w-2xl px-4 py-10 flex-1 w-full">
       <h1 className="text-2xl font-semibold tracking-tight">PTT {board} 搜尋</h1>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">每 5 分鐘自動更新一次</p>
+
+      <InviteNotice />
 
       <form className="flex gap-2 mb-8">
         <input
