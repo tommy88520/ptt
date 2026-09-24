@@ -12,9 +12,8 @@ export async function GET() {
     path: "/",
   });
 
-  // Don't derive this from the incoming request: behind Amplify's SSR
-  // compute the Host header isn't forwarded reliably, so request.url
-  // resolves to a bogus "https://localhost:3000" instead of the real
+  // Don't derive this from the incoming request: behind the Cloudflare
+  // Tunnel, request.url resolves to "localhost:3200" instead of the real
   // public domain.
   const redirectUri = new URL("/api/auth/discord/callback", process.env.APP_BASE_URL).toString();
 

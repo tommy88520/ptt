@@ -13,7 +13,7 @@ interface DiscordUser {
 
 export async function GET(request: Request) {
   // Only used to read the query string; the host/protocol portion is
-  // unreliable behind Amplify's SSR compute, so every redirect below is
+  // localhost behind the Cloudflare Tunnel, so every redirect below is
   // built from APP_BASE_URL instead.
   const url = new URL(request.url);
   const code = url.searchParams.get("code");

@@ -1,29 +1,5 @@
 import { recordPageView } from "@/app/lib/pageview";
-
-interface Article {
-  articleId: string;
-  board: string;
-  title: string;
-  author: string;
-  postDate: string;
-  postTime: string;
-  pushCount: string;
-  url: string;
-  content: string;
-}
-
-async function fetchArticles(keyword: string | undefined, board: string): Promise<Article[]> {
-  const url = new URL(`${process.env.PTT_API_BASE_URL}/articles`);
-  url.searchParams.set("board", board);
-  if (keyword) url.searchParams.set("keyword", keyword);
-
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error(`Failed to fetch articles: ${res.status}`);
-  }
-  const data = (await res.json()) as { items: Article[] };
-  return data.items;
-}
+import { listArticles } from "@/app/services/articles";
 
 function parseTag(title: string): { tag: string | null; rest: string } {
   const match = title.match(/^\[(.+?)\]\s*(.*)$/);
@@ -45,7 +21,7 @@ export default async function Page({
   const params = await searchParams;
   const board = params.board || "MacShop";
   const keyword = params.keyword?.trim();
-  const articles = await fetchArticles(keyword, board);
+  const articles = await listArticles({ board, keyword, limit: 20 });
   await recordPageView("/");
 
   return (

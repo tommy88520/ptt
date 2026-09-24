@@ -2,55 +2,13 @@ import type { Metadata } from "next";
 import { getSession } from "@/app/lib/session";
 import { subscribeAction, unsubscribeAction } from "@/app/actions/subscriptions";
 import { recordPageView } from "@/app/lib/pageview";
+import { listArticles } from "@/app/services/articles";
+import { listSubscriptions } from "@/app/services/subscriptions";
 
 export const metadata: Metadata = {
   title: "訂閱管理｜PTT MacShop 雷達",
   description: "用 Discord 帳號登入,訂閱 PTT MacShop 版關鍵字(例如 iPhone、MacBook),符合的新文章立即私訊通知你。",
 };
-
-interface Subscription {
-  userId: string;
-  keyword: string;
-  active: boolean;
-  createdAt: string;
-}
-
-interface Article {
-  articleId: string;
-  title: string;
-  author: string;
-  postDate: string;
-  postTime: string;
-  pushCount: string;
-  url: string;
-}
-
-async function fetchSubscriptions(userId: string): Promise<Subscription[]> {
-  const url = new URL(`${process.env.PTT_API_BASE_URL}/subscriptions`);
-  url.searchParams.set("userId", userId);
-
-  const res = await fetch(url, {
-    headers: { "x-api-key": process.env.PTT_WEB_API_KEY! },
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    throw new Error(`Failed to fetch subscriptions: ${res.status}`);
-  }
-  const data = (await res.json()) as { items: Subscription[] };
-  return data.items;
-}
-
-async function fetchArticlesForKeyword(keyword: string): Promise<Article[]> {
-  const url = new URL(`${process.env.PTT_API_BASE_URL}/articles`);
-  url.searchParams.set("board", "MacShop");
-  url.searchParams.set("keyword", keyword);
-  url.searchParams.set("limit", "10");
-
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) return [];
-  const data = (await res.json()) as { items: Article[] };
-  return data.items;
-}
 
 export default async function SubscriptionsPage() {
   const session = await getSession();
@@ -73,9 +31,12 @@ export default async function SubscriptionsPage() {
     );
   }
 
-  const subscriptions = await fetchSubscriptions(session.userId);
+  const subscriptions = await listSubscriptions(session.userId);
   const articlesByKeyword = await Promise.all(
-    subscriptions.map(async (sub) => ({ keyword: sub.keyword, articles: await fetchArticlesForKeyword(sub.keyword) }))
+    subscriptions.map(async (sub) => ({
+      keyword: sub.keyword,
+      articles: await listArticles({ board: "MacShop", keyword: sub.keyword, limit: 10 }),
+    }))
   );
 
   return (

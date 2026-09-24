@@ -3,8 +3,8 @@
  * already known to the API, fetch full detail for new ones, and POST them.
  *
  * Meant to be invoked on a schedule (launchd) from a machine PTT doesn't
- * block, since AWS's own IP ranges are blocked. See lambda/api for the
- * receiving end.
+ * block (PTT blocks cloud IP ranges). The receiving end is this repo's own
+ * Next.js server (app/api/articles), so PTT_API_BASE_URL points at localhost.
  *
  * Run with: node --env-file=.env.local scripts/mac-scraper-daemon.ts
  * (requires tsx as the loader; see the npm script in package.json)
