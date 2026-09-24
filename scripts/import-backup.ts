@@ -82,7 +82,7 @@ async function main(): Promise<void> {
     }
     console.log(`  page_views: ${inserted}/${pageViews.length} 筆新增`);
 
-    // rate_limits 只是當天的通知計數（原本兩天就 TTL 清掉），不搬
+    // rate_limits（每日通知額度）改用頻道 webhook 後已拿掉，不搬
     await client.query("COMMIT");
   } catch (err) {
     await client.query("ROLLBACK");

@@ -49,16 +49,17 @@ Tommy 本身很熟 Next.js/TypeScript/GCP,目前 AWS 經驗較少,想透過一�
   （`~/.cloudflared/config.yml` 多一條 ingress），網址
   **https://ptt.huangyanming.com**
 - **資料庫**：家機本機 Postgres，DB 名稱 `ptt`，schema 在 `db/schema.sql`
-  （`articles` / `subscriptions` / `rate_limits` / `page_views`）
+  （`articles` / `subscriptions` / `page_views`）
 - **爬蟲**：`scripts/mac-scraper-daemon.ts`，`com.tommy.ptt-macshop-scraper.plist`
   每 5 分鐘跑一次，POST 到本機 `http://127.0.0.1:3200/api/articles`（要 `x-api-key`）
 - **程式分層**：`app/services/` 直接下 SQL（`pg`），頁面與 Server Action 直接呼叫
   services；只有爬蟲走 HTTP API（`app/api/articles`），因為它是另一個 process
 - **訂閱管理只走網頁**（`/subscriptions`，Discord OAuth2 登入）。Discord 斜線指令
   已拿掉
-- **新文章通知**：`app/services/notifications.ts` 用 Discord Bot 私訊，每個非擁有者
-  帳號每天上限 20 篇。**目前沒有設定 `DISCORD_BOT_TOKEN`，通知會直接略過**（AWS
-  時期 Lambda 上這個值其實也是空的，通知從來沒真的發出去過）
+- **新文章通知**：跟 fubon-futures-monitor 一樣用 Discord webhook
+  （`DISCORD_WEBHOOK_URL`）發到頻道，訊息會 @ 關鍵字符合的訂閱者；失敗重試 3 次。
+  沒設 webhook 時改印在 `logs/web.log`。（AWS 時期是 Bot 私訊 + 每人每日 20 篇上限，
+  但 Lambda 上的 bot token 其實是空的，從來沒發出去過，搬家時改掉）
 
 ### 部署 / 更新
 
@@ -75,8 +76,7 @@ ssh home-mac "~/dev/ptt/deploy/deploy.sh"
 
 `DATABASE_URL`、`PTT_API_BASE_URL`、`PTT_API_KEY`、`APP_BASE_URL`（必須是
 `https://ptt.huangyanming.com`，Discord OAuth 導回網址用它組）、`SESSION_SECRET`、
-`DISCORD_CLIENT_ID`、`DISCORD_CLIENT_SECRET`；要開通知再加 `DISCORD_BOT_TOKEN`、
-`OWNER_DISCORD_ID`。
+`DISCORD_CLIENT_ID`、`DISCORD_CLIENT_SECRET`、`DISCORD_WEBHOOK_URL`（通知用）。
 
 ### Log
 

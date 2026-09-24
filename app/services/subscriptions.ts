@@ -44,10 +44,10 @@ export async function unsubscribe(userId: string, keyword: string): Promise<void
   await db.query("DELETE FROM subscriptions WHERE user_id = $1 AND keyword = $2", [userId, normalizeKeyword(keyword)]);
 }
 
-export async function findSubscribersForTitle(title: string): Promise<string[]> {
-  const { rows } = await db.query<{ user_id: string }>(
-    "SELECT DISTINCT user_id FROM subscriptions WHERE active AND strpos(lower($1), keyword) > 0",
+export async function findSubscriptionsForTitle(title: string): Promise<{ userId: string; keyword: string }[]> {
+  const { rows } = await db.query<{ user_id: string; keyword: string }>(
+    "SELECT user_id, keyword FROM subscriptions WHERE active AND strpos(lower($1), keyword) > 0",
     [title]
   );
-  return rows.map((row) => row.user_id);
+  return rows.map((row) => ({ userId: row.user_id, keyword: row.keyword }));
 }

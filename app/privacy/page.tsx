@@ -20,7 +20,6 @@ export default function PrivacyPage() {
         <LegalList
           items={[
             "你設定的訂閱關鍵字，以及訂閱建立時間",
-            "非本服務擁有者的帳號,每日收到的通知次數,僅用於每日 20 篇的額度控管,隔天自動失效重算",
             "網頁瀏覽次數的統計(依頁面路徑 + 日期彙總的數字,不會記錄是誰瀏覽、也不會記錄 IP 位址或裝置資訊)",
           ]}
         />
@@ -45,7 +44,7 @@ export default function PrivacyPage() {
       <LegalSection title="3. 資料如何使用">
         <LegalList
           items={[
-            "Discord 使用者 ID:用來對應你的訂閱關鍵字、發送符合條件的 Discord 私訊通知",
+            "Discord 使用者 ID:用來對應你的訂閱關鍵字、在 Discord 通知頻道 @ 你",
             "訂閱關鍵字:用來比對新文章標題,決定要不要通知你",
             "頁面瀏覽統計:純粹用來了解網站使用狀況,協助開發者判斷要不要繼續投入這個專案",
           ]}
@@ -57,7 +56,7 @@ export default function PrivacyPage() {
         <LegalList
           items={[
             <>
-              <strong>Discord</strong>:登入驗證、發送私訊通知,受{" "}
+              <strong>Discord</strong>:登入驗證、頻道通知,受{" "}
               <a
                 href="https://discord.com/privacy"
                 target="_blank"

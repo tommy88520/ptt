@@ -17,7 +17,7 @@ export default function TermsPage() {
       <LegalSection title="1. 這是什麼服務">
         <p>
           本服務會定期擷取 PTT MacShop 看板的公開文章（標題、作者、發文時間、內文、推文數），提供搜尋功能，並讓使用者透過
-          Discord 帳號登入後訂閱關鍵字，符合的新文章會以 Discord 私訊通知。
+          Discord 帳號登入後訂閱關鍵字，符合的新文章會在 Discord 通知頻道 @ 使用者。
         </p>
         <p>
           本服務是個人開發、非官方的第三方工具，<strong>與 PTT（批踢踢實業坊）、國立台灣大學、Discord Inc.
@@ -48,8 +48,7 @@ export default function TermsPage() {
 
       <LegalSection title="4. 通知功能與使用限制">
         <p>
-          符合訂閱關鍵字的新文章，會透過 Discord 私訊（DM）通知，通知內容僅包含文章標題與連結。為避免濫用與控制成本，
-          <strong>非本服務擁有者的帳號，每日可收到的通知數量上限為 20 篇</strong>，超過上限會先收到一次提醒，之後靜默到隔天。
+          符合訂閱關鍵字的新文章，會發到 Discord 通知頻道並 @ 訂閱的使用者，通知內容僅包含文章標題與連結；需要在該頻道所在的伺服器裡才看得到通知。
         </p>
       </LegalSection>
 

@@ -7,7 +7,7 @@ import { listSubscriptions } from "@/app/services/subscriptions";
 
 export const metadata: Metadata = {
   title: "訂閱管理｜PTT MacShop 雷達",
-  description: "用 Discord 帳號登入,訂閱 PTT MacShop 版關鍵字(例如 iPhone、MacBook),符合的新文章立即私訊通知你。",
+  description: "用 Discord 帳號登入,訂閱 PTT MacShop 版關鍵字(例如 iPhone、MacBook),符合的新文章立即在 Discord 頻道 @ 你。",
 };
 
 export default async function SubscriptionsPage() {
@@ -19,7 +19,7 @@ export default async function SubscriptionsPage() {
       <main className="mx-auto max-w-2xl px-4 py-10 flex-1 w-full">
         <h1 className="text-2xl font-semibold tracking-tight mb-2">關鍵字訂閱管理</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-          用 Discord 帳號登入,管理你的關鍵字訂閱——符合的新文章會私訊通知到你的 Discord。
+          用 Discord 帳號登入,管理你的關鍵字訂閱——符合的新文章會在 Discord 通知頻道 @ 你。
         </p>
         <a
           href="/api/auth/discord"
@@ -43,7 +43,7 @@ export default async function SubscriptionsPage() {
     <main className="mx-auto max-w-2xl px-4 py-10 flex-1 w-full">
       <h1 className="text-2xl font-semibold tracking-tight mb-1">關鍵字訂閱管理</h1>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        符合的新文章會私訊通知到你的 Discord({session.username})
+        符合的新文章會在 Discord 通知頻道 @ 你({session.username})
       </p>
 
       <form action={subscribeAction} className="flex gap-2 mb-8">

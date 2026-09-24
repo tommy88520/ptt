@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 const TITLE = "PTT MacShop 雷達｜關鍵字訂閱通知,二手 iPhone/Mac 特價提醒";
 const DESCRIPTION =
-  "自動監控 PTT MacShop 版最新文章,訂閱關鍵字(例如 iPhone 17、MacBook、AirPods)符合就用 Discord 私訊通知你,不用一直刷新 PTT。支援網頁搜尋與訂閱管理,免費使用。";
+  "自動監控 PTT MacShop 版最新文章,訂閱關鍵字(例如 iPhone 17、MacBook、AirPods)符合就在 Discord 頻道 @ 你,不用一直刷新 PTT。支援網頁搜尋與訂閱管理,免費使用。";
 
 export const metadata: Metadata = {
   title: TITLE,
