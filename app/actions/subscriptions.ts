@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { deleteSession, getSession } from "@/app/lib/session";
+import { parseCategory } from "@/app/services/categories";
 import { subscribe, unsubscribe } from "@/app/services/subscriptions";
 
 export async function subscribeAction(formData: FormData) {
@@ -12,7 +13,7 @@ export async function subscribeAction(formData: FormData) {
   const keyword = formData.get("keyword")?.toString().trim();
   if (!keyword) return;
 
-  await subscribe(session.userId, keyword);
+  await subscribe(session.userId, keyword, parseCategory(formData.get("category")));
   revalidatePath("/subscriptions");
 }
 
@@ -23,7 +24,7 @@ export async function unsubscribeAction(formData: FormData) {
   const keyword = formData.get("keyword")?.toString();
   if (!keyword) return;
 
-  await unsubscribe(session.userId, keyword);
+  await unsubscribe(session.userId, keyword, parseCategory(formData.get("category")));
   revalidatePath("/subscriptions");
 }
 

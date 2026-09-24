@@ -3,6 +3,7 @@ import { getSession } from "@/app/lib/session";
 import { subscribeAction, unsubscribeAction } from "@/app/actions/subscriptions";
 import { recordPageView } from "@/app/lib/pageview";
 import { listArticles } from "@/app/services/articles";
+import { CATEGORIES, CATEGORY_LABELS } from "@/app/services/categories";
 import { listSubscriptions } from "@/app/services/subscriptions";
 
 export const metadata: Metadata = {
@@ -35,7 +36,8 @@ export default async function SubscriptionsPage() {
   const articlesByKeyword = await Promise.all(
     subscriptions.map(async (sub) => ({
       keyword: sub.keyword,
-      articles: await listArticles({ board: "MacShop", keyword: sub.keyword, limit: 10 }),
+      category: sub.category,
+      articles: await listArticles({ board: "MacShop", keyword: sub.keyword, category: sub.category, limit: 10 }),
     }))
   );
 
@@ -46,28 +48,43 @@ export default async function SubscriptionsPage() {
         符合的新文章會在 Discord 通知頻道 @ 你({session.username})
       </p>
 
-      <form action={subscribeAction} className="flex gap-2 mb-8">
+      <form action={subscribeAction} className="mb-8 flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
           name="keyword"
+          required
           placeholder="新增關鍵字,例如 iphone 17"
-          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         />
-        <button
-          type="submit"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          訂閱
-        </button>
+        <div className="flex gap-2">
+          <select
+            name="category"
+            aria-label="文章分類"
+            defaultValue=""
+            className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:flex-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          >
+            {CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {category ? `只看${CATEGORY_LABELS[category]}` : "販售+徵求都要"}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            訂閱
+          </button>
+        </div>
       </form>
 
       {subscriptions.length === 0 ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">還沒有訂閱任何關鍵字。</p>
       ) : (
         <div className="flex flex-col gap-6">
-          {articlesByKeyword.map(({ keyword, articles }) => (
+          {articlesByKeyword.map(({ keyword, category, articles }) => (
             <section
-              key={keyword}
+              key={`${keyword}|${category}`}
               className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
             >
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-4 py-3 dark:border-gray-800">
@@ -75,12 +92,24 @@ export default async function SubscriptionsPage() {
                   <span className="shrink-0 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                     {keyword}
                   </span>
+                  {category && (
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+                        category === "販售"
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                      }`}
+                    >
+                      只看{CATEGORY_LABELS[category]}
+                    </span>
+                  )}
                   <span className="truncate text-xs text-gray-400">
                     {articles.length > 0 ? `符合 ${articles.length} 篇` : "還沒抓到符合的文章"}
                   </span>
                 </div>
                 <form action={unsubscribeAction} className="shrink-0">
                   <input type="hidden" name="keyword" value={keyword} />
+                  <input type="hidden" name="category" value={category} />
                   <button type="submit" className="text-xs text-red-600 hover:underline">
                     取消訂閱
                   </button>

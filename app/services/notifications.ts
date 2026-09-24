@@ -30,7 +30,7 @@ export async function notifySubscribers(article: NewArticle): Promise<void> {
   const matches = await findSubscriptionsForTitle(article.title);
   if (matches.length === 0) return;
 
-  const keywords = [...new Set(matches.map((m) => m.keyword))];
+  const keywords = [...new Set(matches.map((m) => (m.category ? `${m.keyword}（${m.category}）` : m.keyword)))];
   const mentions = [...new Set(matches.map((m) => `<@${m.userId}>`))];
   const content = `🔔 PTT ${article.board} 新文章符合「${keywords.join("、")}」 ${mentions.join(" ")}\n${article.title}\n${article.url}`;
 

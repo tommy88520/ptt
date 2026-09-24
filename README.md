@@ -56,6 +56,11 @@ Tommy 本身很熟 Next.js/TypeScript/GCP,目前 AWS 經驗較少,想透過一�
   services；只有爬蟲走 HTTP API（`app/api/articles`），因為它是另一個 process
 - **訂閱管理只走網頁**（`/subscriptions`，Discord OAuth2 登入）。Discord 斜線指令
   已拿掉
+- **訂閱可指定分類**：不限 / 只看販售 / 只看徵求（`subscriptions.category`）。實際標題
+  變化很多（`[販售/交換]`、`[賣/苗栗]`、`[徵/新北]`），所以只看分類標籤第一個字：
+  販售 = `[販…]`/`[賣…]`，徵求 = `[徵…]`，規則在 `app/services/categories.ts`
+- **舊網域** `ptt-alert.huangyanming.com`（AWS 時期、blog footer 用過）也接到同一條
+  tunnel，由 `next.config.ts` 301 轉到 `ptt.huangyanming.com`
 - **新文章通知**：跟 fubon-futures-monitor 一樣用 Discord webhook
   （`DISCORD_WEBHOOK_URL`）發到頻道，訊息會 @ 關鍵字符合的訂閱者；失敗重試 3 次。
   沒設 webhook 時改印在 `logs/web.log`。（AWS 時期是 Bot 私訊 + 每人每日 20 篇上限，

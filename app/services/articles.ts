@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/app/lib/db";
+import { CATEGORY_TITLE_PATTERNS, type Category } from "@/app/services/categories";
 
 export interface Article {
   articleId: string;
@@ -44,19 +45,30 @@ function toArticle(row: ArticleRow): Article {
   };
 }
 
-export async function listArticles(options: { board: string; keyword?: string; limit: number }): Promise<Article[]> {
-  const { board, keyword, limit } = options;
-  const { rows } = keyword
-    ? await db.query<ArticleRow>(
-        `SELECT * FROM articles
-         WHERE board = $1 AND strpos(lower(title), lower($2)) > 0
-         ORDER BY article_id DESC LIMIT $3`,
-        [board, keyword, limit]
-      )
-    : await db.query<ArticleRow>(`SELECT * FROM articles WHERE board = $1 ORDER BY article_id DESC LIMIT $2`, [
-        board,
-        limit,
-      ]);
+export async function listArticles(options: {
+  board: string;
+  keyword?: string;
+  category?: Category;
+  limit: number;
+}): Promise<Article[]> {
+  const { board, keyword, category, limit } = options;
+  const params: (string | number)[] = [board];
+  const conditions = ["board = $1"];
+
+  if (keyword) {
+    params.push(keyword);
+    conditions.push(`strpos(lower(title), lower($${params.length})) > 0`);
+  }
+  if (category) {
+    params.push(CATEGORY_TITLE_PATTERNS[category]);
+    conditions.push(`title ~ $${params.length}`);
+  }
+  params.push(limit);
+
+  const { rows } = await db.query<ArticleRow>(
+    `SELECT * FROM articles WHERE ${conditions.join(" AND ")} ORDER BY article_id DESC LIMIT $${params.length}`,
+    params
+  );
   return rows.map(toArticle);
 }
 
