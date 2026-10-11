@@ -16,6 +16,8 @@
 - 無。
 
 ## 4. 下次要看
+- 10-12 凌晨重寫過一次 git 歷史（把當天的文件 commit 合成一個）。別台電腦的這個資料夾如果在那之前 pull 過，`git pull` 會失敗——
+  先確認沒有沒推的改動，再 `git fetch && git reset --hard origin/main`。
 - Discord 通知有沒有發到 **PTT 專用頻道**（10-12 換了 webhook；有新文章符合訂閱關鍵字才會發，現在訂閱是 0 筆，所以平常不會有訊息）。
 - 下次真的跑 `./deploy/deploy.sh` 時，確認「3/5 套用 schema」那步正常（改成用 `.env.local` 的 `DATABASE_URL`，單獨跑過那一行是好的，整支還沒跑過）。
 
