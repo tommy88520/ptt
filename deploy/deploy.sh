@@ -19,7 +19,9 @@ grep -q '^APP_BASE_URL=https://' .env.local || { echo "   ❌ APP_BASE_URL 必�
 
 echo "3/5 安裝套件 + 套用 schema"
 npm ci --silent
-psql -q -d ptt -f db/schema.sql
+# 用程式的帳號（.env.local 的 DATABASE_URL，帳號 ptt）套 schema：新表才會是 ptt 擁有的。
+# 用本機超級帳號（psql -d ptt）建的表，程式會沒權限讀寫（2026-10-10 資料庫拆帳號之後）。
+psql -q "$(grep '^DATABASE_URL=' .env.local | cut -d= -f2- | tr -d "\"'")" -v ON_ERROR_STOP=1 -f db/schema.sql
 
 echo "4/5 建置"
 rm -rf .next

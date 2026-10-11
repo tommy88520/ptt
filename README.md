@@ -12,6 +12,8 @@
 Tommy 本身很熟 Next.js/TypeScript/GCP,目前 AWS 經驗較少,想透過一個
 「完整、自己會想用」的網站來練習,而不是做玩具等級的 tutorial。
 
+> 給 Claude 的規則跟環境速查在 `CLAUDE.md`，現在做到哪在 `HANDOFF.md`（交接／接手的做法也寫在 `CLAUDE.md`）。
+
 ## 開發說明
 
 本專案的架構規劃、技術選型與問題排查均由開發者本人主導與決策;實作過程
@@ -44,11 +46,10 @@ Tommy 本身很熟 Next.js/TypeScript/GCP,目前 AWS 經驗較少,想透過一�
 家機，做法跟 fubon-futures-monitor 一樣。
 
 - **家機**：`ssh home-mac`（Tailscale），專案在 `/Users/huangyanming/dev/ptt`
-- **網站**：Next.js production server，`com.tommy.ptt-web.plist` 常駐在 port 3200
-- **對外**：共用 fubon-futures-monitor 那條 Cloudflare Tunnel
-  （`~/.cloudflared/config.yml` 多一條 ingress），網址
-  **https://ptt.huangyanming.com**
-- **資料庫**：家機本機 Postgres，DB 名稱 `ptt`，schema 在 `db/schema.sql`
+- **網站**：Next.js production server，`com.tommy.ptt-web.plist` 常駐在 port 3200（只聽 127.0.0.1，對外一律走 Cloudflare）
+- **對外**：自己一條 Cloudflare Tunnel `ptt-web`（`~/.cloudflared/config-ptt.yml`，`com.tommy.ptt-tunnel.plist`；
+  2026-10-10 從期貨專案那條拆出來），網址 **https://ptt.huangyanming.com**
+- **資料庫**：家機本機 Postgres，DB 名稱 `ptt`、專用帳號 `ptt`（2026-10-10 起每個專案各自的帳號），schema 在 `db/schema.sql`
   （`articles` / `subscriptions` / `page_views`）
 - **爬蟲**：`scripts/mac-scraper-daemon.ts`，`com.tommy.ptt-macshop-scraper.plist`
   每 5 分鐘跑一次，POST 到本機 `http://127.0.0.1:3200/api/articles`（要 `x-api-key`）
@@ -61,8 +62,8 @@ Tommy 本身很熟 Next.js/TypeScript/GCP,目前 AWS 經驗較少,想透過一�
   販售 = `[販…]`/`[賣…]`，徵求 = `[徵…]`，規則在 `app/services/categories.ts`
 - **舊網域** `ptt-alert.huangyanming.com`（AWS 時期、blog footer 用過）也接到同一條
   tunnel，由 `next.config.ts` 301 轉到 `ptt.huangyanming.com`
-- **新文章通知**：跟 fubon-futures-monitor 一樣用 Discord webhook
-  （`DISCORD_WEBHOOK_URL`）發到頻道，訊息會 @ 關鍵字符合的訂閱者；失敗重試 3 次。
+- **新文章通知**：用 Discord webhook（`DISCORD_WEBHOOK_URL`）發到 PTT 專用的頻道（2026-10-12 起，原本跟
+  fubon-futures-monitor 共用同一個頻道），訊息會 @ 關鍵字符合的訂閱者；失敗重試 3 次。
   沒設 webhook 時改印在 `logs/web.log`。（AWS 時期是 Bot 私訊 + 每人每日 20 篇上限，
   但 Lambda 上的 bot token 其實是空的，從來沒發出去過，搬家時改掉）
 
@@ -74,7 +75,9 @@ Tommy 本身很熟 Next.js/TypeScript/GCP,目前 AWS 經驗較少,想透過一�
 ssh home-mac "~/dev/ptt/deploy/deploy.sh"
 ```
 
-`deploy.sh` 會 `git pull`、檢查 `.env.local`、`npm ci`、套 schema、build、重啟
+人就在家機上的話，直接 `./deploy/deploy.sh`。
+
+`deploy.sh` 會 `git pull`、檢查 `.env.local`、`npm ci`、用帳號 `ptt` 套 schema、build、重啟
 網站並確認 3200 回 200。爬蟲每次都重新讀原始碼，不用重啟。
 
 ### 家機 `.env.local` 需要的值
