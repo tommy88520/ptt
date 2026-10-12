@@ -29,7 +29,7 @@
 2. **這個 GitHub repo 是公開的**：文件、commit 訊息不要寫機密，也不要寫其他專案的內部細節。**機密不印出來**：`.env.local`（`DATABASE_URL`、`PTT_API_KEY`、`SESSION_SECRET`、`DISCORD_CLIENT_SECRET`、`DISCORD_WEBHOOK_URL`）只講名稱。
 3. **同一台家機上還有別的專案在跑，不要動到它們**：名字不是 `ptt` 開頭的 launchd 服務、別的 Cloudflare 通道設定、別的資料庫、
    別的 Discord 頻道都不是這個專案的。PTT 有自己的通道、資料庫帳號、Discord 頻道（下面「環境」）。
-4. **爬蟲禮儀**：每 5 分鐘一輪、每個請求間隔 1.5 秒（`REQUEST_DELAY_MS`），不要調快。公告／置底文不抓。
+4. **爬蟲禮儀**：每 3 分鐘一輪（2026-10-12 使用者從 5 分鐘改的）、每個請求間隔 1.5 秒（`REQUEST_DELAY_MS`）；要再調快先問使用者。公告／置底文不抓。
 5. **改完要部署才生效**（Next.js 要 build）：`./deploy/deploy.sh`。沒有測試環境——部署前先 `npx tsc --noEmit`、`npm run lint`。
 6. 文件寫的不一定對，**有疑問先實測**（curl、查 DB、看 log）。
 
@@ -49,7 +49,7 @@
 | 網站 | Next.js 16（App Router、React 19、Tailwind 4）production，port **3200**、只聽 127.0.0.1；launchd `com.tommy.ptt-web`（caffeinate 包著） |
 | 對外 | Cloudflare 通道 `ptt-web`（`~/.cloudflared/config-ptt.yml`，launchd `com.tommy.ptt-tunnel`）：`ptt.huangyanming.com`；舊網域 `ptt-alert.` 由 `next.config.ts` 301 轉過去 |
 | 資料庫 | 家機 Postgres 17，資料庫 `ptt`、帳號 `ptt`（密碼在 `.env.local` 的 `DATABASE_URL`）；表 `articles`／`subscriptions`／`page_views`（`db/schema.sql`） |
-| 爬蟲 | `scripts/mac-scraper-daemon.ts`，launchd `com.tommy.ptt-macshop-scraper` 每 300 秒跑一次，POST `127.0.0.1:3200/api/articles`（`x-api-key`） |
+| 爬蟲 | `scripts/mac-scraper-daemon.ts`，launchd `com.tommy.ptt-macshop-scraper` 每 180 秒跑一次，POST `127.0.0.1:3200/api/articles`（`x-api-key`） |
 | 通知 | Discord webhook（`DISCORD_WEBHOOK_URL`，**PTT 專用頻道**，2026-10-12 跟期貨拆開）；訊息 @ 關鍵字符合的訂閱者，失敗重試 3 次 |
 | 登入 | Discord OAuth2（只有 `/subscriptions` 要登入）；session 是 `jose` 簽的 cookie（`SESSION_SECRET`） |
 | Log | `logs/web.log`、`web.error.log`、`scraper.log`、`scraper.error.log` |
@@ -80,7 +80,7 @@ psql ptt                                             # 本機超級帳號（只�
 
 - PTT 擋掉整個 AWS 網段，所以 2026-09-24 整套從 AWS 搬回家機；AWS 資源已全部刪除。
 - `APP_BASE_URL` 一定要是 `https://ptt.huangyanming.com`（Discord OAuth 導回網址用它組，設成 localhost 手機登入會被導去 localhost）。
-- 網站跟爬蟲同時重啟，爬蟲那一輪會連不到 3200、exit 1；下一輪（5 分鐘後）自己就好，或手動 `kickstart` 一次。
+- 網站跟爬蟲同時重啟，爬蟲那一輪會連不到 3200、exit 1；下一輪（3 分鐘後）自己就好，或手動 `kickstart` 一次。
 - 資料表要由帳號 `ptt` 擁有：`deploy.sh` 用 `.env.local` 的 `DATABASE_URL` 套 schema（用超級帳號建的新表，程式會沒權限）。
 - 標題分類變化很多（`[販售/交換]`、`[賣/苗栗]`、`[徵/新北]`），所以只看第一個字。
 - `.env.local` 裡的 `OWNER_DISCORD_ID` 現在程式沒有用到（留著沒差）。

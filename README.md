@@ -52,7 +52,7 @@ Tommy 本身很熟 Next.js/TypeScript/GCP,目前 AWS 經驗較少,想透過一�
 - **資料庫**：家機本機 Postgres，DB 名稱 `ptt`、專用帳號 `ptt`（2026-10-10 起每個專案各自的帳號），schema 在 `db/schema.sql`
   （`articles` / `subscriptions` / `page_views`）
 - **爬蟲**：`scripts/mac-scraper-daemon.ts`，`com.tommy.ptt-macshop-scraper.plist`
-  每 5 分鐘跑一次，POST 到本機 `http://127.0.0.1:3200/api/articles`（要 `x-api-key`）
+  每 3 分鐘跑一次，POST 到本機 `http://127.0.0.1:3200/api/articles`（要 `x-api-key`）
 - **程式分層**：`app/services/` 直接下 SQL（`pg`），頁面與 Server Action 直接呼叫
   services；只有爬蟲走 HTTP API（`app/api/articles`），因為它是另一個 process
 - **訂閱管理只走網頁**（`/subscriptions`，Discord OAuth2 登入）。Discord 斜線指令

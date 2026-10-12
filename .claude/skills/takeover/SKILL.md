@@ -23,7 +23,7 @@ description: 接手——新 session 開始、換機器、使用者說「接手�
 ## 4. 服務狀態（家機上跑）
 - 網站：`curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3200/`（要 200）；對外 `curl -s -o /dev/null -w '%{http_code}\n' https://ptt.huangyanming.com/`。
 - 三個服務：`launchctl list | grep ptt`（`ptt-web`、`ptt-tunnel` 要有 pid；`ptt-macshop-scraper` 平常 pid 是 `-`、exit 0）。
-- 爬蟲：`tail -3 logs/scraper.log`（最近一輪應該在 5 分鐘內，`done. checked=N new=N saved=N`）；`tail -5 logs/scraper.error.log`、`tail -5 logs/web.error.log` 有沒有新的錯誤。
+- 爬蟲：`tail -3 logs/scraper.log`（最近一輪應該在 3 分鐘內；log 的時間是 UTC，`done. checked=N new=N saved=N`）；`tail -5 logs/scraper.error.log`、`tail -5 logs/web.error.log` 有沒有新的錯誤。
 - 資料：`psql -At ptt -c "SELECT count(*), max(scraped_at) FROM articles"`（最新一筆的抓取時間）。
 
 ## 5. 回報（≤8 行）
