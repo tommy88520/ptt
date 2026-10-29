@@ -27,7 +27,7 @@ async function postWebhook(webhookUrl: string, content: string): Promise<void> {
 }
 
 export async function notifySubscribers(article: NewArticle): Promise<void> {
-  const matches = await findSubscriptionsForTitle(article.title);
+  const matches = await findSubscriptionsForTitle(article.board, article.title);
   if (matches.length === 0) return;
 
   const keywords = [...new Set(matches.map((m) => (m.category ? `${m.keyword}（${m.category}）` : m.keyword)))];

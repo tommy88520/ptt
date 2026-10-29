@@ -15,7 +15,7 @@ export default function SiteFooter() {
         </a>
 
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-gray-400">
-          <span>PTT MacShop 雷達</span>
+          <span>PTT 二手雷達</span>
           <a href={CONTACT_URL} className="hover:text-gray-600 dark:hover:text-gray-300">
             寫信給我
           </a>

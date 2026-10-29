@@ -4,12 +4,13 @@ import { getSession } from "@/app/lib/session";
 import { subscribeAction, unsubscribeAction } from "@/app/actions/subscriptions";
 import { recordPageView } from "@/app/lib/pageview";
 import { listArticles } from "@/app/services/articles";
+import { BOARDS, DEFAULT_BOARD } from "@/app/services/boards";
 import { CATEGORIES, CATEGORY_LABELS } from "@/app/services/categories";
 import { listSubscriptions } from "@/app/services/subscriptions";
 
 export const metadata: Metadata = {
-  title: "訂閱管理｜PTT MacShop 雷達",
-  description: "用 Discord 帳號登入,訂閱 PTT MacShop 版關鍵字(例如 iPhone、MacBook),符合的新文章立即在 Discord 頻道 @ 你。",
+  title: "訂閱管理｜PTT 二手雷達",
+  description: "用 Discord 帳號登入,訂閱 PTT MacShop、HardwareSale 版關鍵字(例如 iPhone、顯示卡),符合的新文章立即在 Discord 頻道 @ 你。",
 };
 
 export default async function SubscriptionsPage() {
@@ -37,9 +38,10 @@ export default async function SubscriptionsPage() {
   const subscriptions = await listSubscriptions(session.userId);
   const articlesByKeyword = await Promise.all(
     subscriptions.map(async (sub) => ({
+      board: sub.board,
       keyword: sub.keyword,
       category: sub.category,
-      articles: await listArticles({ board: "MacShop", keyword: sub.keyword, category: sub.category, limit: 10 }),
+      articles: await listArticles({ board: sub.board, keyword: sub.keyword, category: sub.category, limit: 10 }),
     }))
   );
 
@@ -61,6 +63,18 @@ export default async function SubscriptionsPage() {
           className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         />
         <div className="flex gap-2">
+          <select
+            name="board"
+            aria-label="看板"
+            defaultValue={DEFAULT_BOARD}
+            className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:flex-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          >
+            {BOARDS.map((board) => (
+              <option key={board} value={board}>
+                {board}
+              </option>
+            ))}
+          </select>
           <select
             name="category"
             aria-label="文章分類"
@@ -86,13 +100,16 @@ export default async function SubscriptionsPage() {
         <p className="text-sm text-gray-500 dark:text-gray-400">還沒有訂閱任何關鍵字。</p>
       ) : (
         <div className="flex flex-col gap-6">
-          {articlesByKeyword.map(({ keyword, category, articles }) => (
+          {articlesByKeyword.map(({ board, keyword, category, articles }) => (
             <section
-              key={`${keyword}|${category}`}
+              key={`${board}|${keyword}|${category}`}
               className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
             >
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 px-4 py-3 dark:border-gray-800">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                    {board}
+                  </span>
                   <span className="shrink-0 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                     {keyword}
                   </span>
@@ -112,6 +129,7 @@ export default async function SubscriptionsPage() {
                   </span>
                 </div>
                 <form action={unsubscribeAction} className="shrink-0">
+                  <input type="hidden" name="board" value={board} />
                   <input type="hidden" name="keyword" value={keyword} />
                   <input type="hidden" name="category" value={category} />
                   <button type="submit" className="text-xs text-red-600 hover:underline">

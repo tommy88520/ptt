@@ -53,6 +53,8 @@ Tommy 本身很熟 Next.js/TypeScript/GCP,目前 AWS 經驗較少,想透過一�
   （`articles` / `subscriptions` / `page_views`）
 - **爬蟲**：`scripts/mac-scraper-daemon.ts`，`com.tommy.ptt-macshop-scraper.plist`
   每 3 分鐘跑一次，POST 到本機 `http://127.0.0.1:3200/api/articles`（要 `x-api-key`）
+- **看板**：目前抓 MacShop、HardwareSale，清單在 `app/services/boards.ts`（爬蟲、首頁切換、
+  訂閱都讀這份）。加看板只要改這個陣列；訂閱是綁看板的（`subscriptions.board`）
 - **程式分層**：`app/services/` 直接下 SQL（`pg`），頁面與 Server Action 直接呼叫
   services；只有爬蟲走 HTTP API（`app/api/articles`），因為它是另一個 process
 - **訂閱管理只走網頁**（`/subscriptions`，Discord OAuth2 登入）。Discord 斜線指令

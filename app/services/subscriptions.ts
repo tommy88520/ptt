@@ -1,9 +1,11 @@
 import "server-only";
 import { db } from "@/app/lib/db";
+import { parseBoard, type Board } from "@/app/services/boards";
 import { parseCategory, titleMatchesCategory, type Category } from "@/app/services/categories";
 
 export interface Subscription {
   userId: string;
+  board: Board;
   keyword: string;
   category: Category;
   active: boolean;
@@ -12,6 +14,7 @@ export interface Subscription {
 
 interface SubscriptionRow {
   user_id: string;
+  board: string;
   keyword: string;
   category: string;
   active: boolean;
@@ -21,6 +24,7 @@ interface SubscriptionRow {
 function toSubscription(row: SubscriptionRow): Subscription {
   return {
     userId: row.user_id,
+    board: parseBoard(row.board),
     keyword: row.keyword,
     category: parseCategory(row.category),
     active: row.active,
@@ -34,32 +38,31 @@ export function normalizeKeyword(keyword: string): string {
 
 export async function listSubscriptions(userId: string): Promise<Subscription[]> {
   const { rows } = await db.query<SubscriptionRow>(
-    "SELECT * FROM subscriptions WHERE user_id = $1 ORDER BY created_at",
+    "SELECT * FROM subscriptions WHERE user_id = $1 ORDER BY board, created_at",
     [userId]
   );
   return rows.map(toSubscription);
 }
 
-export async function subscribe(userId: string, keyword: string, category: Category): Promise<void> {
+export async function subscribe(userId: string, board: Board, keyword: string, category: Category): Promise<void> {
   await db.query(
-    `INSERT INTO subscriptions (user_id, keyword, category) VALUES ($1, $2, $3)
-     ON CONFLICT (user_id, keyword, category) DO UPDATE SET active = true`,
-    [userId, normalizeKeyword(keyword), category]
+    `INSERT INTO subscriptions (user_id, board, keyword, category) VALUES ($1, $2, $3, $4)
+     ON CONFLICT (user_id, board, keyword, category) DO UPDATE SET active = true`,
+    [userId, board, normalizeKeyword(keyword), category]
   );
 }
 
-export async function unsubscribe(userId: string, keyword: string, category: Category): Promise<void> {
-  await db.query("DELETE FROM subscriptions WHERE user_id = $1 AND keyword = $2 AND category = $3", [
-    userId,
-    normalizeKeyword(keyword),
-    category,
-  ]);
+export async function unsubscribe(userId: string, board: Board, keyword: string, category: Category): Promise<void> {
+  await db.query(
+    "DELETE FROM subscriptions WHERE user_id = $1 AND board = $2 AND keyword = $3 AND category = $4",
+    [userId, board, normalizeKeyword(keyword), category]
+  );
 }
 
-export async function findSubscriptionsForTitle(title: string): Promise<Subscription[]> {
+export async function findSubscriptionsForTitle(board: string, title: string): Promise<Subscription[]> {
   const { rows } = await db.query<SubscriptionRow>(
-    "SELECT * FROM subscriptions WHERE active AND strpos(lower($1), keyword) > 0",
-    [title]
+    "SELECT * FROM subscriptions WHERE active AND board = $1 AND strpos(lower($2), keyword) > 0",
+    [board, title]
   );
   return rows.map(toSubscription).filter((sub) => titleMatchesCategory(title, sub.category));
 }

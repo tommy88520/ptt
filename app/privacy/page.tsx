@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { LegalPage, LegalSection, LegalList } from "@/app/components/legal";
 
 export const metadata: Metadata = {
-  title: "隱私權政策｜PTT MacShop 雷達",
-  description: "PTT MacShop 雷達如何蒐集、使用、保存你的資料。",
+  title: "隱私權政策｜PTT 二手雷達",
+  description: "PTT 二手雷達如何蒐集、使用、保存你的資料。",
 };
 
 export default function PrivacyPage() {
@@ -11,7 +11,7 @@ export default function PrivacyPage() {
     <LegalPage
       title="隱私權政策"
       updated="2026-07-30"
-      intro="本文件說明「PTT MacShop 雷達」（以下稱「本服務」）如何蒐集、使用、保存你的資料。"
+      intro="本文件說明「PTT 二手雷達」（以下稱「本服務」）如何蒐集、使用、保存你的資料。"
     >
       <LegalSection title="1. 我們蒐集哪些資料">
         <p>透過 Discord 登入時，本服務只會取得 Discord 提供的下列公開資訊（OAuth2 identify 範圍）：</p>

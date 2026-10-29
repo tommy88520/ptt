@@ -1,9 +1,9 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { insertArticle, listArticles, type NewArticle } from "@/app/services/articles";
+import { DEFAULT_BOARD } from "@/app/services/boards";
 import { notifySubscribers } from "@/app/services/notifications";
 
-const DEFAULT_BOARD = "MacShop";
 const REQUIRED_FIELDS = ["articleId", "board", "title", "author", "url"] as const;
 const OPTIONAL_FIELDS = ["postDate", "postTime", "pushCount", "content"] as const;
 

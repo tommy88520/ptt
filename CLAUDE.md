@@ -71,7 +71,7 @@ psql ptt                                             # 本機超級帳號（只�
 
 - `app/page.tsx` 文章列表＋搜尋；`app/subscriptions/page.tsx` 訂閱管理（要登入）；`app/privacy`、`app/terms` 條款。
 - `app/services/*.ts`：**直接下 SQL**（`pg`，連線在 `app/lib/db.ts`）——`articles`、`subscriptions`、`notifications`（發 Discord）、
-  `categories`（販售／徵求只看分類標籤第一個字）、`pageviews`。頁面跟 Server Action（`app/actions/subscriptions.ts`）直接呼叫 services。
+  `categories`（販售／徵求只看分類標籤第一個字）、`boards`（要抓的看板清單，爬蟲也 import 它）、`pageviews`。頁面跟 Server Action（`app/actions/subscriptions.ts`）直接呼叫 services。
 - `app/api/articles/route.ts`：只有爬蟲用（另一個 process，所以走 HTTP＋`x-api-key`）。`app/api/auth/discord/*`：OAuth 登入。
 - `app/lib/session.ts`（cookie session）、`app/lib/pageview.ts`。
 - `scripts/mac-scraper-daemon.ts`＋`scripts/lib/ptt-scraper.ts`：爬蟲。`scripts/import-backup.ts`：搬家時把 DynamoDB JSON 倒進 Postgres（可重跑）。

@@ -17,7 +17,7 @@ export default async function SiteHeader() {
             <circle cx="23.5" cy="8.5" r="4" fill="#f97316" />
           </svg>
           <span className="hidden truncate text-sm font-semibold text-gray-900 sm:inline dark:text-gray-100">
-            PTT MacShop 雷達
+            PTT 二手雷達
           </span>
         </Link>
 

@@ -1,6 +1,6 @@
 /**
- * Runs one scrape cycle: fetch the PTT MacShop board list, skip articles
- * already known to the API, fetch full detail for new ones, and POST them.
+ * Runs one scrape cycle: for each board in BOARDS, fetch the board list, skip
+ * articles already known to the API, fetch full detail for new ones, and POST them.
  *
  * Meant to be invoked on a schedule (launchd) from a machine PTT doesn't
  * block (PTT blocks cloud IP ranges). The receiving end is this repo's own
@@ -9,10 +9,9 @@
  * Run with: node --env-file=.env.local scripts/mac-scraper-daemon.ts
  * (requires tsx as the loader; see the npm script in package.json)
  */
+import { BOARDS } from "../app/services/boards.ts";
 import { delay, fetchArticleDetail, fetchPage, parseArticles, type Article } from "./lib/ptt-scraper.ts";
 
-const BOARD = "MacShop";
-const BASE_URL = `https://www.ptt.cc/bbs/${BOARD}/index.html`;
 const REQUEST_DELAY_MS = 1500;
 
 const API_BASE_URL = requireEnv("PTT_API_BASE_URL");
@@ -46,9 +45,12 @@ async function postArticle(detail: Awaited<ReturnType<typeof fetchArticleDetail>
   return res.json();
 }
 
-async function main() {
-  const [html, knownIds] = await Promise.all([fetchPage(BASE_URL), fetchKnownArticleIds(BOARD)]);
-  const listed: Article[] = parseArticles(html, BOARD);
+async function scrapeBoard(board: string) {
+  const [html, knownIds] = await Promise.all([
+    fetchPage(`https://www.ptt.cc/bbs/${board}/index.html`),
+    fetchKnownArticleIds(board),
+  ]);
+  const listed: Article[] = parseArticles(html, board);
   const newArticles = listed.filter((a) => !knownIds.has(a.articleId));
 
   let saved = 0;
@@ -61,8 +63,23 @@ async function main() {
   }
 
   console.log(
-    `[${new Date().toISOString()}] done. checked=${listed.length} new=${newArticles.length} saved=${saved}`
+    `[${new Date().toISOString()}] ${board} done. checked=${listed.length} new=${newArticles.length} saved=${saved}`
   );
+}
+
+async function main() {
+  let failed = false;
+  for (const board of BOARDS) {
+    // 一個看板失敗不要擋住其他看板
+    try {
+      await scrapeBoard(board);
+    } catch (err) {
+      console.error(`[${new Date().toISOString()}] ${board} scrape failed:`, err);
+      failed = true;
+    }
+    await delay(REQUEST_DELAY_MS);
+  }
+  if (failed) process.exit(1);
 }
 
 main().catch((err) => {

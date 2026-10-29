@@ -1,6 +1,8 @@
+import Link from "next/link";
 import InviteNotice from "@/app/components/InviteNotice";
 import { recordPageView } from "@/app/lib/pageview";
 import { listArticles } from "@/app/services/articles";
+import { BOARDS, parseBoard } from "@/app/services/boards";
 
 function parseTag(title: string): { tag: string | null; rest: string } {
   const match = title.match(/^\[(.+?)\]\s*(.*)$/);
@@ -20,7 +22,7 @@ export default async function Page({
   searchParams: Promise<{ keyword?: string; board?: string }>;
 }) {
   const params = await searchParams;
-  const board = params.board || "MacShop";
+  const board = parseBoard(params.board);
   const keyword = params.keyword?.trim();
   const articles = await listArticles({ board, keyword, limit: 20 });
   await recordPageView("/");
@@ -28,11 +30,29 @@ export default async function Page({
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 flex-1 w-full">
       <h1 className="text-2xl font-semibold tracking-tight">PTT {board} 搜尋</h1>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">每 5 分鐘自動更新一次</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">每 3 分鐘自動更新一次</p>
 
       <InviteNotice />
 
+      <nav className="mb-4 flex gap-2" aria-label="切換看板">
+        {BOARDS.map((b) => (
+          <Link
+            key={b}
+            href={{ pathname: "/", query: { board: b, ...(keyword ? { keyword } : {}) } }}
+            aria-current={b === board ? "page" : undefined}
+            className={`rounded-full px-3 py-1 text-sm font-medium ${
+              b === board
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            }`}
+          >
+            {b}
+          </Link>
+        ))}
+      </nav>
+
       <form className="flex gap-2 mb-8">
+        <input type="hidden" name="board" value={board} />
         <input
           type="text"
           name="keyword"

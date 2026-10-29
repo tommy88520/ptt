@@ -20,13 +20,15 @@ CREATE TABLE IF NOT EXISTS articles (
 CREATE INDEX IF NOT EXISTS articles_board_article_id_idx ON articles (board, article_id DESC);
 
 -- category：'' = 不限、'販售'、'徵求'（比對規則在 app/services/categories.ts）
+-- board：訂閱哪個看板（可選的看板在 app/services/boards.ts）
 CREATE TABLE IF NOT EXISTS subscriptions (
   user_id     TEXT NOT NULL,
+  board       TEXT NOT NULL DEFAULT 'MacShop',
   keyword     TEXT NOT NULL,
   category    TEXT NOT NULL DEFAULT '',
   active      BOOLEAN NOT NULL DEFAULT true,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (user_id, keyword, category)
+  PRIMARY KEY (user_id, board, keyword, category)
 );
 
 DO $$ BEGIN
@@ -35,6 +37,16 @@ DO $$ BEGIN
     ALTER TABLE subscriptions ADD COLUMN category TEXT NOT NULL DEFAULT '';
     ALTER TABLE subscriptions DROP CONSTRAINT subscriptions_pkey;
     ALTER TABLE subscriptions ADD PRIMARY KEY (user_id, keyword, category);
+  END IF;
+END $$;
+
+-- 多看板之前的訂閱都是 MacShop
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name = 'subscriptions' AND column_name = 'board') THEN
+    ALTER TABLE subscriptions ADD COLUMN board TEXT NOT NULL DEFAULT 'MacShop';
+    ALTER TABLE subscriptions DROP CONSTRAINT subscriptions_pkey;
+    ALTER TABLE subscriptions ADD PRIMARY KEY (user_id, board, keyword, category);
   END IF;
 END $$;
 

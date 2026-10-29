@@ -3,8 +3,8 @@ import Link from "next/link";
 import { LegalPage, LegalSection, LegalList } from "@/app/components/legal";
 
 export const metadata: Metadata = {
-  title: "使用條款｜PTT MacShop 雷達",
-  description: "PTT MacShop 雷達的使用條款與免責聲明。",
+  title: "使用條款｜PTT 二手雷達",
+  description: "PTT 二手雷達的使用條款與免責聲明。",
 };
 
 export default function TermsPage() {
@@ -16,7 +16,7 @@ export default function TermsPage() {
     >
       <LegalSection title="1. 這是什麼服務">
         <p>
-          本服務會定期擷取 PTT MacShop 看板的公開文章（標題、作者、發文時間、內文、推文數），提供搜尋功能，並讓使用者透過
+          本服務會定期擷取 PTT MacShop、HardwareSale 看板的公開文章（標題、作者、發文時間、內文、推文數），提供搜尋功能，並讓使用者透過
           Discord 帳號登入後訂閱關鍵字，符合的新文章會在 Discord 通知頻道 @ 使用者。
         </p>
         <p>
@@ -28,7 +28,7 @@ export default function TermsPage() {
       <LegalSection title="2. 資料來源與著作權">
         <LegalList
           items={[
-            "本服務顯示的文章內容擷取自 PTT MacShop 看板的公開頁面，著作權屬於原發文者與 PTT 平台所有，本服務僅提供搜尋/通知的索引功能，不會宣稱擁有這些內容的著作權",
+            "本服務顯示的文章內容擷取自 PTT MacShop、HardwareSale 看板的公開頁面，著作權屬於原發文者與 PTT 平台所有，本服務僅提供搜尋/通知的索引功能，不會宣稱擁有這些內容的著作權",
             "搜尋結果一律附上原文連結，鼓勵使用者回到 PTT 原站閱讀完整討論與推文",
             "若原發文者或 PTT 官方要求下架特定內容，會配合處理",
           ]}
@@ -56,7 +56,7 @@ export default function TermsPage() {
         <LegalList
           items={[
             <>
-              <strong>本服務不涉入、不擔保、不介入任何透過 PTT MacShop 版進行的交易</strong>
+              <strong>本服務不涉入、不擔保、不介入任何透過 PTT MacShop、HardwareSale 版進行的交易</strong>
               ——包含但不限於商品真偽、賣家/買家身分、交易安全、付款糾紛。所有交易行為與風險由參與交易的雙方自行負責，請自行遵守
               PTT 板規並注意交易安全
             </>,
